@@ -16,10 +16,10 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-
 public class ReportService {
 
     private final ReportJobRepository reportJobRepository;
+    private final ReportGeneratorService reportGeneratorService; // ← CHANGE 1
 
     @Transactional
     public ReportStatusDTO createReportJob(ReportRequestDTO request) {
@@ -29,11 +29,11 @@ public class ReportService {
                 .jobId(jobId)
                 .reportType(request.getReportType())
                 .requestedBy(request.getRequestedBy())
-                .parameters(buildParameters(request)) 
+                .parameters(buildParameters(request))
                 .build();
 
-                  reportJobRepository.save(job);
-
+        reportJobRepository.save(job);
+        reportGeneratorService.generateReport(job); // ← CHANGE 2
 
         return ReportStatusDTO.builder()
                 .jobId(jobId)
@@ -46,32 +46,27 @@ public class ReportService {
                 .build();
     }
 
-     public ReportStatusDTO getJobStatus(String jobId) {
+    public ReportStatusDTO getJobStatus(String jobId) {
         ReportJob job = reportJobRepository.findByJobId(jobId)
                 .orElseThrow(() -> new RuntimeException(
                         "Job not found with id: " + jobId));
-
         return mapToStatusDTO(job);
-     }
-
-
-
-
-     public List<ReportStatusDTO> getJobsByUser(String requestedBy) {
-
-        List<ReportJob> jobs = reportJobRepository
-                .findByRequestedBy(requestedBy);
-
-
-        return jobs.stream()
-                .map(this::mapToStatusDTO)  
-                .collect(Collectors.toList()); 
     }
 
+    public List<ReportStatusDTO> getJobsByUser(String requestedBy) {
+        List<ReportJob> jobs = reportJobRepository.findByRequestedBy(requestedBy);
+        return jobs.stream()
+                .map(this::mapToStatusDTO)
+                .collect(Collectors.toList());
+    }
 
+    // ← CHANGE 3: needed by the download endpoint
+    public ReportJob getJobById(String jobId) {
+        return reportJobRepository.findByJobId(jobId)
+                .orElseThrow(() -> new RuntimeException("Job not found: " + jobId));
+    }
 
-
-      private ReportStatusDTO mapToStatusDTO(ReportJob job) {
+    private ReportStatusDTO mapToStatusDTO(ReportJob job) {
         return ReportStatusDTO.builder()
                 .jobId(job.getJobId())
                 .status(job.getStatus())
@@ -83,9 +78,7 @@ public class ReportService {
                 .build();
     }
 
-
-
-        private String buildParameters(ReportRequestDTO request) {
+    private String buildParameters(ReportRequestDTO request) {
         return String.format(
                 "{\"fromDate\":\"%s\",\"toDate\":\"%s\"}",
                 request.getFromDate(),
@@ -93,9 +86,7 @@ public class ReportService {
         );
     }
 
-
-
-      private String buildMessage(ReportStatus status) {
+    private String buildMessage(ReportStatus status) {
         return switch (status) {
             case QUEUED     -> "Report is queued for processing.";
             case PROCESSING -> "Report is currently being generated.";
@@ -103,9 +94,9 @@ public class ReportService {
             case FAILED     -> "Report generation failed.";
             case EXPIRED    -> "Report has expired. Please request again.";
             default         -> "Unknown status.";  
+
         };
     }
-
-
-
 }
+
+
