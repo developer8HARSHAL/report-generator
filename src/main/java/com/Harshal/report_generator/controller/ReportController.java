@@ -58,17 +58,17 @@ public class ReportController {
 @GetMapping("/{jobId}/download")
 public ResponseEntity<?> downloadReport(@PathVariable String jobId) {
 
-    // Step 1: Fetch the full job entity from DB
+    // Fetch the full job entity from DB
     ReportJob job = reportService.getJobById(jobId);
 
-    // Step 2: Handle EXPIRED — file is gone
+    // Handle EXPIRED — file is gone
     if (job.getStatus() == ReportStatus.EXPIRED) {
         return ResponseEntity
                 .status(HttpStatus.GONE)
                 .body("Report has expired. Please request a new one.");
     }
 
-    // Step 3: Handle NOT DONE — file not ready yet
+    // Handle NOT DONE — file not ready yet
     if (job.getStatus() != ReportStatus.DONE) {
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
@@ -76,7 +76,7 @@ public ResponseEntity<?> downloadReport(@PathVariable String jobId) {
                         + job.getStatus().name());
     }
 
-    // Step 4: Job is DONE — stream the file back to client
+    // Job is DONE — stream the file back to client
     try {
         Path filePath = Paths.get(job.getFilePath());
         FileInputStream fileStream = new FileInputStream(filePath.toFile());
