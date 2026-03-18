@@ -46,3 +46,6 @@ target/
 Thumbs.db
 
 filestructure.txt/
+
+### testing
+ReportServiceTest.java/

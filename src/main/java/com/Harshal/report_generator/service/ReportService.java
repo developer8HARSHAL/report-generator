@@ -5,6 +5,7 @@ import com.Harshal.report_generator.dto.ReportStatusDTO;
 import com.Harshal.report_generator.model.ReportJob;
 import com.Harshal.report_generator.model.ReportStatus;
 import com.Harshal.report_generator.repository.ReportJobRepository;
+import com.Harshal.report_generator.exception.ReportNotFoundException;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -48,7 +49,7 @@ public class ReportService {
 
     public ReportStatusDTO getJobStatus(String jobId) {
         ReportJob job = reportJobRepository.findByJobId(jobId)
-                .orElseThrow(() -> new RuntimeException(
+                .orElseThrow(() -> new ReportNotFoundException(
                         "Job not found with id: " + jobId));
         return mapToStatusDTO(job);
     }

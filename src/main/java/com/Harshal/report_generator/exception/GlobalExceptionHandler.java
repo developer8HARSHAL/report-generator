@@ -36,13 +36,12 @@ public class GlobalExceptionHandler {
 
 
 
-     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponseDTO> handleGeneric(Exception ex){
-        return ResponseEntity
-        .status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .body(new ErrorResponseDTO(500, "An unexpected error occured."));
-
-    }
+@ExceptionHandler(Exception.class)
+public ResponseEntity<ErrorResponseDTO> handleGeneric(Exception ex) {
+    return ResponseEntity
+            .status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body(new ErrorResponseDTO(500, "An unexpected error occurred."));
+}
 
     
 }
